@@ -1,0 +1,31 @@
+# Coverage files
+coverage.json
+coverage/
+*.lcov
+*.gcov
+
+# Neovim/Vim temporary files
+*.swp
+*.swo
+*~
+.netrwhist
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# Lua bytecode
+*.luac
+
+# Log files
+*.log
