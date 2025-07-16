@@ -6,9 +6,39 @@ local display = require("show-coverage.display")
 local utils = require("show-coverage.utils")
 
 local coverage_data = {}
+local auto_show_enabled = false
 
 function M.setup(opts)
 	config_module.setup(opts)
+
+	if opts and opts.auto_show then
+		M.enable_auto_show()
+	end
+end
+
+function M.enable_auto_show()
+	auto_show_enabled = true
+
+	vim.api.nvim_create_augroup("ShowCoverage", { clear = true })
+	vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+		group = "ShowCoverage",
+		callback = function()
+			if auto_show_enabled then
+				M.show()
+			end
+		end,
+	})
+end
+
+function M.disable_auto_show()
+	auto_show_enabled = false
+	vim.api.nvim_del_augroup_by_name("ShowCoverage")
+end
+
+function M.refresh()
+	if auto_show_enabled or display.has_signs(vim.api.nvim_get_current_buf()) then
+		M.show()
+	end
 end
 
 function M.show()

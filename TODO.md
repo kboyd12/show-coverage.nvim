@@ -1,5 +1,3 @@
-- Multi line matching for comments
-- add a readme
 - add tests
-- add a license
-- get luacheck / luastyle working
+- autocmd to run when opening a file and show coverage is toggled
+- add a command to update the current file if new .coverage file is found
