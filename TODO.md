@@ -1,4 +1,3 @@
-- add tests
-- add a command to update the current file if new .coverage file is found
-- utilize the find_coverage_async function with configurable .coverage file name
 - look for rcfile
+- multi-line comment / parenthesis support
+- bufdo when updating coverage

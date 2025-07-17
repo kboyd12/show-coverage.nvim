@@ -12,16 +12,31 @@ end
 
 function M.find_coverage_async(git_root, callback, coverage_file)
 	git_root = git_root or M.find_git_root()
+	coverage_file = coverage_file or ".coverage"
+
+	local output_lines = {}
+
 	vim.fn.jobstart({ "find", git_root, "-type", "f", "-name", coverage_file, "-print", "-quit" }, {
-		stdout_buffered = true,
 		on_stdout = function(_, data)
-			-- data is a list of lines; first element is our path or empty
-			local path = (data and data[1] ~= "" and data[1]) or nil
-			callback(path)
+			for _, line in ipairs(data) do
+				if line and line ~= "" then
+					table.insert(output_lines, line)
+				end
+			end
 		end,
 		on_stderr = function(_, err)
-			vim.notify("Error finding .coverage: " .. table.concat(err, "\n"), vim.log.levels.ERROR)
-			callback(nil)
+			for _, line in ipairs(err) do
+				if line and line ~= "" then
+					vim.notify("Find error: " .. line, vim.log.levels.ERROR)
+				end
+			end
+		end,
+		on_exit = function(_, exit_code)
+			if exit_code == 0 and #output_lines > 0 then
+				callback(output_lines[1])
+			else
+				callback(nil)
+			end
 		end,
 	})
 end

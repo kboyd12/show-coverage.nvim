@@ -1,8 +1,10 @@
 local M = {}
 
 local default_config = {
-	coverage_file = "coverage",
+	coverage_file = ".coverage",
 	coverage_format = "auto", -- "auto", "json", "xml", "coverage"
+	auto_show = false,
+	watch_files = true,
 	signs = {
 		covered = "✓",
 		uncovered = "✗",

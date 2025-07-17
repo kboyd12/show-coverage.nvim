@@ -7,12 +7,20 @@ local utils = require("show-coverage.utils")
 
 local coverage_data = {}
 local auto_show_enabled = false
+local file_watchers = {}
 
 function M.setup(opts)
 	config_module.setup(opts)
 
-	if opts and opts.auto_show then
+	-- Get the merged config after setup
+	local config = config_module.get()
+
+	if config.auto_show then
 		M.enable_auto_show()
+	end
+
+	if config.watch_files then
+		M.enable_file_watching()
 	end
 end
 
@@ -35,6 +43,80 @@ function M.disable_auto_show()
 	vim.api.nvim_del_augroup_by_name("ShowCoverage")
 end
 
+function M.enable_file_watching()
+	M.disable_file_watching() -- Clear any existing watchers
+
+	utils.find_coverage_async(nil, function(coverage_path)
+		if coverage_path then
+			M.watch_coverage_file(coverage_path)
+		end
+	end, ".coverage")
+end
+
+function M.disable_file_watching()
+	for _, watcher in pairs(file_watchers) do
+		if watcher then
+			watcher:stop()
+		end
+	end
+	file_watchers = {}
+end
+
+function M.watch_coverage_file(filepath)
+	if file_watchers[filepath] then
+		file_watchers[filepath]:stop()
+	end
+
+	local watcher = vim.loop.new_fs_event()
+	if not watcher then
+		print("Failed to create file watcher")
+		return
+	end
+
+	file_watchers[filepath] = watcher
+
+	local function on_change(err, filename, events)
+		if err then
+			print("File watcher error:", err)
+			-- Try to restart the watcher after an error
+			vim.defer_fn(function()
+				M.watch_coverage_file(filepath)
+			end, 1000)
+			return
+		end
+
+		if events.change or events.rename then
+			print("Coverage file updated, refreshing...")
+			-- Debounce rapid changes
+			vim.defer_fn(function()
+				M.show()
+				-- Restart watcher after file changes (handles recreated files)
+				vim.defer_fn(function()
+					M.watch_coverage_file(filepath)
+				end, 500)
+			end, 100)
+		end
+	end
+
+	-- Watch the directory instead of the file to handle recreated files
+	local dir = vim.fn.fnamemodify(filepath, ":h")
+	local filename = vim.fn.fnamemodify(filepath, ":t")
+
+	watcher:start(dir, {}, function(err, changed_filename, events)
+		if err then
+			on_change(err, changed_filename, events)
+			return
+		end
+
+		-- Only trigger if our specific file changed
+		if changed_filename == filename then
+			on_change(err, changed_filename, events)
+		end
+	end)
+
+	print("Watching coverage directory for file:", filepath)
+end
+
 function M.refresh()
 	if auto_show_enabled or display.has_signs(vim.api.nvim_get_current_buf()) then
 		M.show()
@@ -44,6 +126,7 @@ end
 function M.find_and_update()
 	local config = config_module.get()
 	local git_root = utils.find_git_root()
+	print(git_root)
 
 	if not git_root then
 		print("Not in a git repository")
