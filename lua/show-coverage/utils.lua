@@ -1,5 +1,31 @@
 local M = {}
 
+function M.find_git_root()
+	local handle = io.popen("git rev-parse --show-toplevel")
+	if not handle then
+		return nil
+	end
+	local path = handle:read("*a")
+	handle:close()
+	return path:gsub("\n", "")
+end
+
+function M.find_coverage_async(git_root, callback, coverage_file)
+	git_root = git_root or M.find_git_root()
+	vim.fn.jobstart({ "find", git_root, "-type", "f", "-name", coverage_file, "-print", "-quit" }, {
+		stdout_buffered = true,
+		on_stdout = function(_, data)
+			-- data is a list of lines; first element is our path or empty
+			local path = (data and data[1] ~= "" and data[1]) or nil
+			callback(path)
+		end,
+		on_stderr = function(_, err)
+			vim.notify("Error finding .coverage: " .. table.concat(err, "\n"), vim.log.levels.ERROR)
+			callback(nil)
+		end,
+	})
+end
+
 function M.get_file_coverage(coverage_data, filepath)
 	if not coverage_data.files then
 		return nil
@@ -34,7 +60,6 @@ local function is_in_multiline_comment(bufnr, line_num)
 		return false
 	end
 
-	local total_lines = vim.api.nvim_buf_line_count(bufnr)
 	local in_comment = false
 
 	for i = 1, line_num do

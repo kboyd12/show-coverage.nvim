@@ -27,8 +27,7 @@ function M.apply_signs(bufnr, file_coverage, config, utils)
 			}
 
 			if config.highlight_lines then
-				local line_hl_group = is_covered and config.line_highlight_groups.covered
-					or config.line_highlight_groups.uncovered
+				local line_hl_group = is_covered and config.line_highlight_groups.covered or config.line_highlight_groups.uncovered
 
 				local line_content = vim.api.nvim_buf_get_lines(bufnr, line_num - 1, line_num, false)[1] or ""
 				local text_start = line_content:find("%S") or 1

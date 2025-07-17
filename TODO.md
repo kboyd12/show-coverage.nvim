@@ -1,3 +1,4 @@
 - add tests
-- autocmd to run when opening a file and show coverage is toggled
 - add a command to update the current file if new .coverage file is found
+- utilize the find_coverage_async function with configurable .coverage file name
+- look for rcfile

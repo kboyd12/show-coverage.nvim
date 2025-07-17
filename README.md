@@ -8,7 +8,8 @@ A Neovim plugin that displays code coverage information directly in the editor u
 - Support for multiple coverage file formats:
   - JSON coverage files
   - XML coverage files (Cobertura format)
-  - Binary .coverage files (planned)
+  - LCOV format files (JavaScript/Jest)
+  - Binary .coverage files (Python coverage package)
 - Configurable highlight groups and colors
 - Line highlighting with customizable styles
 - Multi-line comment detection
@@ -149,10 +150,35 @@ Expected structure:
 
 Supports standard Cobertura XML format with `<class>` elements containing `<line>` elements.
 
+### LCOV Format
+
+Standard LCOV format used by JavaScript testing tools like Jest:
+```
+SF:src/file.js
+DA:1,1
+DA:2,0
+DA:3,1
+end_of_record
+```
+
+### Binary .coverage Format (Python)
+
+Python's coverage package binary format. Requires the `coverage` tool to be installed:
+
+```bash
+pip install coverage
+```
+
+The plugin automatically converts binary `.coverage` files to JSON using:
+```bash
+coverage json -o temp.json --data-file .coverage
+```
+
 ## Requirements
 
 - Neovim 0.7+
 - Coverage data file in supported format
+- For binary .coverage files: Python `coverage` package (`pip install coverage`)
 
 ## License
 

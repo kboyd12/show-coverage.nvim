@@ -41,28 +41,57 @@ function M.refresh()
 	end
 end
 
+function M.find_and_update()
+	local config = config_module.get()
+	local git_root = utils.find_git_root()
+
+	if not git_root then
+		print("Not in a git repository")
+		return
+	end
+
+	local search_pattern = config.coverage_file .. "*"
+
+	utils.find_coverage_async(git_root, function(coverage_path)
+		if coverage_path then
+			print("Found coverage file: " .. coverage_path)
+			coverage_data = parsers.parse_coverage_file(config, coverage_path)
+			if coverage_data then
+				M.show()
+			else
+				print("Failed to parse coverage file")
+			end
+		else
+			print("No coverage file found in git repository")
+		end
+	end, search_pattern)
+end
+
 function M.show()
 	local config = config_module.get()
-	coverage_data = parsers.parse_coverage_file(config)
-	if not coverage_data then
-		return
-	end
 
-	local bufnr = vim.api.nvim_get_current_buf()
-	local filepath = vim.api.nvim_buf_get_name(bufnr)
+	parsers.parse_coverage_file(config, function(data)
+		coverage_data = data
+		if not coverage_data then
+			return
+		end
 
-	if filepath == "" then
-		print("No file in current buffer")
-		return
-	end
+		local bufnr = vim.api.nvim_get_current_buf()
+		local filepath = vim.api.nvim_buf_get_name(bufnr)
 
-	local file_coverage = utils.get_file_coverage(coverage_data, filepath)
-	if not file_coverage then
-		print("No coverage data for current file")
-		return
-	end
+		if filepath == "" then
+			print("No file in current buffer")
+			return
+		end
 
-	display.apply_signs(bufnr, file_coverage, config, utils)
+		local file_coverage = utils.get_file_coverage(coverage_data, filepath)
+		if not file_coverage then
+			print("No coverage data for current file")
+			return
+		end
+
+		display.apply_signs(bufnr, file_coverage, config, utils)
+	end)
 end
 
 function M.hide()
