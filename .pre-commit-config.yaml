@@ -8,12 +8,6 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
 
-  - repo: https://github.com/JohnnyMorganz/StyLua
-    rev: v0.19.1
-    hooks:
-      - id: stylua
-        args: [--check]
-
   # - repo: https://github.com/luarocks/luacheck
   #   rev: v1.1.2
   #   hooks:

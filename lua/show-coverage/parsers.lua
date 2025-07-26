@@ -60,11 +60,11 @@ local function parse_coverage_binary(filepath)
 		return nil
 	end
 
-	-- Use Python's coverage package to convert binary .coverage to XML
-	local temp_xml = os.tmpname() .. ".xml"
+	-- Use Python's coverage package to convert binary .coverage to JSON
+	local temp_json = os.tmpname() .. ".json"
 
-	-- Run coverage xml command to convert binary to XML
-	local cmd = string.format("coverage xml -o %s --data-file %s", temp_xml, filepath)
+	-- Run coverage json command to convert binary to JSON
+	local cmd = string.format("coverage json -o %s --data-file %s", temp_json, filepath)
 	local handle = io.popen(cmd .. " 2>&1")
 
 	if not handle then
@@ -78,15 +78,15 @@ local function parse_coverage_binary(filepath)
 	if not exit_code then
 		print("Coverage command failed: " .. result)
 		-- Clean up temp file if it exists
-		os.remove(temp_xml)
+		os.remove(temp_json)
 		return nil
 	end
 
-	-- Parse the generated XML file using our existing XML parser
-	local coverage_data = parse_coverage_xml(temp_xml)
+	-- Parse the generated JSON file using our existing JSON parser
+	local coverage_data = parse_coverage_json(temp_json)
 
 	-- Clean up temp file
-	os.remove(temp_xml)
+	os.remove(temp_json)
 
 	return coverage_data
 end
